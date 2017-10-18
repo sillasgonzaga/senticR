@@ -2,6 +2,7 @@ library(tidyverse)
 library(stringr)
 library(qdap)
 library(magrittr)
+library(devtools)
 
 dict_files <- dir("/home/sillas/R/Projetos/senticnet-4.0", pattern = "*.py", recursive = TRUE,
                   full.names = TRUE)
@@ -12,6 +13,7 @@ names(dict_files)[names(dict_files) == "senticnet4"] <- "senticnet_en"
 
 
 convert_dict_to_dataframe <- function(py_file, py_file_name){
+  
   df <- read.table(py_file, header = FALSE, sep = ",", skip = 1, stringsAsFactors = FALSE)
   # separate first column using = as a separator
   df <- df %>% separate(V1, c("V01", "V02"), sep = "=")
@@ -40,12 +42,19 @@ convert_dict_to_dataframe <- function(py_file, py_file_name){
   )
   # trim character variables
   df %<>% mutate_if(is.character, str_trim)
-  # save as a Rds filee
-  out_filename <- paste0(py_file_name, ".Rds")
-  out_folder <- "raw-data/RDS-files/"
+  
+  
+  ## save data to be used later in the package as data() objects
+  out_filename <- paste0(py_file_name, ".rda")
+  out_folder <- "data/"
   if (!dir.exists(out_folder)) dir.create(out_folder)
   out_filename <- paste0(out_folder, out_filename)
-  saveRDS(df, out_filename)
+  # save dataframe with correct name (df becomes senticneg_LANG)
+  data_frame_name <- py_file_name
+  assign(data_frame_name, df)
+  
+  save(list = data_frame_name, file = out_filename)
+  #saveRDS(df, out_filename)
 }
 
 
@@ -56,6 +65,9 @@ dict_files <- dict_files[!str_detect(dict_files, error)]
 system.time({
   list(dict_files, names(dict_files)) %>% pmap(convert_dict_to_dataframe)
 })
+
+py_file = dict_files[1]
+py_file_name = names(dict_files)[1]
 
 # Use devtools to store data as pkg-usable
 
