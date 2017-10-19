@@ -13,7 +13,7 @@ names(dict_files)[names(dict_files) == "senticnet4"] <- "senticnet_en"
 
 
 convert_dict_to_dataframe <- function(py_file, py_file_name){
-  
+
   df <- read.table(py_file, header = FALSE, sep = ",", skip = 1, stringsAsFactors = FALSE)
   # separate first column using = as a separator
   df <- df %>% separate(V1, c("V01", "V02"), sep = "=")
@@ -24,7 +24,10 @@ convert_dict_to_dataframe <- function(py_file, py_file_name){
   df$V02 <- as.numeric(str_replace_all(df$V02, "\\[", ""))
   df$V12 <- str_replace_all(df$V12, "\\]", "")
   # for english lexicon, remove V07 (unnecessary polarity column (positive or negative))
-  if (py_file_name == "senticnet_en") df$V7 <- NULL
+  if (py_file_name == "senticnet_en") {
+    df$V7 <- NULL
+    df$V13 <- str_replace_all(df$V13, "\\]", "")
+  }
 
   # check if dataframe has 13 columns
   if (ncol(df) != 13){
@@ -66,8 +69,10 @@ system.time({
   list(dict_files, names(dict_files)) %>% pmap(convert_dict_to_dataframe)
 })
 
-py_file = dict_files[1]
-py_file_name = names(dict_files)[1]
 
+# en <- "/home/sillas/R/Projetos/senticnet-4.0/senticnet4.py"
+# name_en <- "senticnet_en"
+# 
+# convert_dict_to_dataframe(en, name_en)
 # Use devtools to store data as pkg-usable
 
